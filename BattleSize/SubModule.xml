@@ -1,0 +1,25 @@
+﻿<Module>
+  <Name value="BattleSize"/>
+  <Id value="BattleSize"/>
+  <Version value="v1.0.0"/>
+  <SingleplayerModule value="true"/>
+  <MultiplayerModule value="false"/>
+  <DependedModules>
+    <DependedModule Id="Native" DependentVersion="e1.5.8"/>
+    <DependedModule Id="SandBoxCore" DependentVersion="e1.5.8"/>
+    <DependedModule Id="Sandbox" DependentVersion="e1.5.8"/>
+    <DependedModule Id="StoryMode" DependentVersion="e1.5.8"/>
+  </DependedModules>
+  <SubModules>
+    <SubModule>
+      <Name value="BattleSize"/>
+      <DLLName value="BattleSize.dll"/>
+      <SubModuleClassType value="BattleSize.SubModule"/>
+      <Tags>
+        <Tag key="DedicatedServerType" value="none" />
+        <Tag key="IsNoRenderModeElement" value="false" />
+      </Tags>
+    </SubModule>
+  </SubModules>
+  <Xmls/>
+</Module>
