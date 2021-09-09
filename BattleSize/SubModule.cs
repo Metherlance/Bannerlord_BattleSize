@@ -24,7 +24,7 @@ namespace BattleSize
                 harmony.PatchAll();
 
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 Settings.Instance.ErrorWhileLoading  = true;
             }
@@ -44,10 +44,6 @@ namespace BattleSize
                 else
                 {
                     InformationManager.DisplayMessage(new InformationMessage("BattleSize | set " + Settings.Instance.RealBattleSize + " to RealBattleSize"));
-                    if (Settings.Instance.RealBattleSize>1024)
-                    {
-                        InformationManager.DisplayMessage(new InformationMessage("BattleSize | will crash if men+horse > 2048"));
-                    }
                 }
             }
             // show only 1 time

@@ -5,12 +5,10 @@
   <!--        BattleSize Settings             -->
   <!-- ////////////////////////////////////// -->
 
-  <!-- Override GetRealBattleSize in BannerlordConfig and get_MaxNumberOfTroopsForMission in MissionAgentSpawnLogic. -->
-  <!-- min 2 max 2048 -->
-  <!-- 1024 is last safe value (worst case -> full cav (1024 soldier + 1024 horse)) -->
-  <!-- above 2048 agents (men + cav) the engine will crash -->
-  <!-- PS: you can't have reinforcement after 2048 agents was engaged/dead -->
-  <RealBattleSize>2048</RealBattleSize>
+  <!-- min: 2 max: 2047 (max is 2047 agents (camera take one entity)) -->
+  <!-- 1024 is last safe value (worst case -> full cav (1024 soldiers + 1024 horses)) -->
+  <!-- above 2048 entities (men + cav + camera) the engine will crash -->
+  <RealBattleSize>2047</RealBattleSize>
 
   <!-- Show value loaded in game -->
   <ShowInfo>true</ShowInfo>

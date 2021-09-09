@@ -8,13 +8,15 @@ namespace BattleSize
         // singleton
 
         private static Settings _instance;
+        public const int ENTITY_ENGINE_MAX = 2047;
 
         public static Settings Instance
         {
             get
             {
-                if (Settings._instance == null)
+                if (Settings._instance == null) {
                     Settings._instance = new Settings();
+                }
                 return Settings._instance;
             }
             set
@@ -31,14 +33,13 @@ namespace BattleSize
             get => _realBattleSize;
             set
             {
-                // 2 <= value <= 2048
-                _realBattleSize = Math.Max(2, Math.Min(2048,value));
+                // 2 <= value <= 2047
+                _realBattleSize = Math.Max(2, Math.Min(2047, value));
             }
         }
 
-
         public bool ShowInfo { get; set; } = true;
 
-        public bool ErrorWhileLoading  { get; set; } = false;
+        public bool ErrorWhileLoading { get; set; } = false;
     }
 }
