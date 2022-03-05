@@ -13,10 +13,19 @@ using TaleWorlds.MountAndBlade.Missions.Handlers;
 namespace BattleSize
 {
     [HarmonyPatch(typeof(BannerlordConfig))]
-    [HarmonyPatch("GetRealBattleSize")]
     class BannerlordConfigPatchBS
     {
-        static void Postfix(ref int __result)
+        [HarmonyPostfix]
+        [HarmonyPatch("GetRealBattleSize")]
+        static void GetRealBattleSize(ref int __result)
+        {
+            // 1000 default max
+            __result = Settings.Instance.RealBattleSize;
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch("GetRealBattleSizeForSiege")]
+        static void GetRealBattleSizeForSiege(ref int __result)
         {
             // 1000 default max
             __result = Settings.Instance.RealBattleSize;
