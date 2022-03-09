@@ -276,7 +276,7 @@ namespace BattleSize
 
         [HarmonyPrefix]
         [HarmonyPatch("BattleSizeSpawnTick")]
-        static bool Prefix(MissionAgentSpawnLogic __instance, ref int ____battleSize, ref List<SpawnPhase>[] ____phases, ref MissionSide[] ____missionSides)
+        static bool BattleSizeSpawnTick(MissionAgentSpawnLogic __instance, ref int ____battleSize, ref List<SpawnPhase>[] ____phases, ref MissionSide[] ____missionSides)
         {
             // Don't use NumActiveTroops of IMissionTroopSupplier, it takes allocated troop not used !!! ...
 
@@ -290,18 +290,22 @@ namespace BattleSize
                 return false;
             }
 
-            int nbAgentSpawnable = Settings.Instance.RealBattleSize - __instance.Mission.Agents.Count;
+            int nbAgentSpawnable = Settings.Instance.RealBattleSize - __instance.Mission.AllAgents.Count;
             int nbAgentSpawnMin = (int)(((float)____battleSize) * 0.100000001490116);
 
             // || last troop need to spawn
-            if (nbAgentSpawnable > nbAgentSpawnMin || nbAgentSpawnable > DefenderActivePhase.RemainingSpawnNumber || nbAgentSpawnable > AttackerActivePhase.RemainingSpawnNumber)
+            if (nbAgentSpawnable > nbAgentSpawnMin)
             {
                 int nbSpawnableDef;
                 int nbSpawnableAtt;
                 if (TotalSpawnNumber > nbAgentSpawnable)
                 {
-                    nbSpawnableDef = DefenderActivePhase.RemainingSpawnNumber * nbAgentSpawnable / TotalSpawnNumber;
-                    nbSpawnableAtt = nbAgentSpawnable - nbSpawnableDef;
+                    int realBattleSizeWithoutHorse = nbAgentSpawnable + DefenderActivePhase.NumberActiveTroops + AttackerActivePhase.NumberActiveTroops;
+                    // ratio with spawn left and active units
+                    // nbSpawnableDef =(MaxUnitOnField*(DefSpawnLeft+DefActiveUnit)/(AllSpawnLeft+AllUnitActive))-DefActiveUnit
+                    int nbDefUnitTheorical  = ((realBattleSizeWithoutHorse * (DefenderActivePhase.RemainingSpawnNumber + DefenderActivePhase.NumberActiveTroops)) / (TotalSpawnNumber + DefenderActivePhase.NumberActiveTroops + AttackerActivePhase.NumberActiveTroops));
+                    nbSpawnableDef = MathF.Min(MathF.Max(nbDefUnitTheorical - DefenderActivePhase.NumberActiveTroops, 0), MathF.Min(nbAgentSpawnable, DefenderActivePhase.RemainingSpawnNumber));
+                    nbSpawnableAtt = MathF.Min(MathF.Max(nbAgentSpawnable - nbSpawnableDef, 0), AttackerActivePhase.RemainingSpawnNumber);
                 }
                 else
                 {
@@ -313,17 +317,19 @@ namespace BattleSize
                 int defUnitActiveAndSpawn = nbSpawnableDef + DefenderActivePhase.NumberActiveTroops;
                 int attUnitActiveAndSpawn = nbSpawnableAtt + AttackerActivePhase.NumberActiveTroops;
                 // -50 for tiny battle
-                if (nbSpawnableAtt > 0 && defUnitActiveAndSpawn - 50 > attUnitActiveAndSpawn * 2)
+                if (nbSpawnableAtt > 0 && defUnitActiveAndSpawn - 50 > (float)attUnitActiveAndSpawn * Settings.Instance.OneVsMax)
                 {
                     nbSpawnableDef = 0;
+                    nbSpawnableAtt = MathF.Min(nbAgentSpawnable, AttackerActivePhase.RemainingSpawnNumber);
                 }
-                if (nbSpawnableDef > 0 && attUnitActiveAndSpawn - 50 > defUnitActiveAndSpawn * 2)
+                if (nbSpawnableDef > 0 && attUnitActiveAndSpawn - 50 > (float)defUnitActiveAndSpawn * Settings.Instance.OneVsMax)
                 {
                     nbSpawnableAtt = 0;
+                    nbSpawnableDef = MathF.Min(nbAgentSpawnable, DefenderActivePhase.RemainingSpawnNumber);
                 }
 
                 //horse 2 times for att in case of engine limit
-                if (nbSpawnableAtt > 0)
+                if (nbSpawnableAtt > 1)
                 {
                     int spawned = (int)____missionSides[1].SpawnTroops(nbSpawnableAtt / 2, true, true);
                     AttackerActivePhase.RemainingSpawnNumber -= spawned;
@@ -369,8 +375,25 @@ namespace BattleSize
                         int[] tabSpawnLeft = new int[2];
                         if (TotalSpawnNumber > nbAgentSpawnableLeft)
                         {
-                            tabSpawnLeft[0] = DefenderActivePhase.TotalSpawnNumber * nbAgentSpawnableLeft / TotalSpawnNumber;
-                            tabSpawnLeft[1] = nbAgentSpawnableLeft - tabSpawnLeft[0];
+                            // 1 vs max
+                            int nbTroopMin = (int)((float)TotalSpawnNumber / (1f + Settings.Instance.OneVsMax));
+                            if (DefenderActivePhase.TotalSpawnNumber < nbTroopMin)
+                            {
+                                tabSpawnLeft[0] = (int)MathF.Min(DefenderActivePhase.TotalSpawnNumber, nbTroopMin);
+                                tabSpawnLeft[1] = nbAgentSpawnableLeft - tabSpawnLeft[0];
+                            }
+                            else if (AttackerActivePhase.TotalSpawnNumber < nbTroopMin)
+                            {
+                                // begin with side whose has less troops
+                                tabSpawnLeft[1] = (int)MathF.Min(AttackerActivePhase.TotalSpawnNumber, nbTroopMin);
+                                tabSpawnLeft[0] = nbAgentSpawnableLeft - tabSpawnLeft[1];
+                            }
+                            else
+                            {
+                                tabSpawnLeft[0] = DefenderActivePhase.TotalSpawnNumber * nbAgentSpawnableLeft / TotalSpawnNumber;
+                                tabSpawnLeft[1] = nbAgentSpawnableLeft - tabSpawnLeft[0];
+                            }
+
                         }
                         else
                         {

@@ -38,6 +38,17 @@ namespace BattleSize
             }
         }
 
+        private float _oneVsMax = 2;
+        public float OneVsMax
+        {
+            get => _oneVsMax;
+            set
+            {
+                // 1 <= value <= 4
+                _oneVsMax = Math.Max(1, Math.Min(4, value));
+            }
+        }
+
         public bool ShowInfo { get; set; } = true;
 
         public bool ErrorWhileLoading { get; set; } = false;

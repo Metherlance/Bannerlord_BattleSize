@@ -10,6 +10,10 @@
   <!-- above 2048 entities (men + cav + camera) the engine will crash -->
   <RealBattleSize>2047</RealBattleSize>
 
+  <!-- min: 1 max: 4 Ex: 1.5123 -->
+  <!-- if one side has reinforcements, limit troops ratio on battlefield ex: 1 vs X max-->
+  <OneVsMax>1.5</OneVsMax>
+
   <!-- Show value loaded in game -->
   <ShowInfo>true</ShowInfo>
 
