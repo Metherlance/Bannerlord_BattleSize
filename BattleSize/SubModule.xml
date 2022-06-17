@@ -1,14 +1,14 @@
 ﻿<Module>
   <Name value="BattleSize"/>
   <Id value="BattleSize"/>
-  <Version value="v1.7.0.2"/>
+  <Version value="v1.8.0.0"/>
   <SingleplayerModule value="true"/>
   <MultiplayerModule value="false"/>
   <DependedModules>
-    <DependedModule Id="Native" DependentVersion="e1.7.0"/>
-    <DependedModule Id="SandBoxCore" DependentVersion="e1.7.0"/>
-    <DependedModule Id="Sandbox" DependentVersion="e1.7.0"/>
-    <DependedModule Id="StoryMode" DependentVersion="e1.7.0"/>
+    <DependedModule Id="Native" DependentVersion="e1.8.0"/>
+    <DependedModule Id="SandBoxCore" DependentVersion="e1.8.0"/>
+    <DependedModule Id="Sandbox" DependentVersion="e1.8.0"/>
+    <DependedModule Id="StoryMode" DependentVersion="e1.8.0"/>
   </DependedModules>
   <SubModules>
     <SubModule>

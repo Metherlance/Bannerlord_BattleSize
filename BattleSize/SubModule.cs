@@ -17,14 +17,14 @@ namespace BattleSize
             try
             {
                 // load xml
-                Settings.Instance = SettingsLoader.LoadSettings(Path.Combine(BasePath.Name, "Modules", "BattleSize", "ModuleData", "config.xml"));
+                Settings.Instance = SettingsLoader.LoadSettings(System.IO.Path.Combine(BasePath.Name, "Modules", "BattleSize", "ModuleData", "config.xml"));
 
                 // patch methods
                 var harmony = new Harmony("bannerlord.battlesize");
                 harmony.PatchAll();
 
             }
-            catch (Exception e)
+            catch(Exception ex)
             {
                 Settings.Instance.ErrorWhileLoading  = true;
             }
@@ -51,4 +51,5 @@ namespace BattleSize
         }
     }
 }
+
 
