@@ -341,8 +341,8 @@ namespace BattleSize
             SpawnPhase AttackerActivePhase = ____phases[1][0];
             int TotalSpawnNumber = DefenderActivePhase.RemainingSpawnNumber + AttackerActivePhase.RemainingSpawnNumber;
 
-            int numberOfTroopsCanBeSpawned = __instance.NumberOfTroopsCanBeSpawned;
-            if (TotalSpawnNumber <= 0 || numberOfTroopsCanBeSpawned <= 0)
+            //int numberOfTroopsCanBeSpawned = __instance.NumberOfTroopsCanBeSpawned;
+            if (TotalSpawnNumber <= 0)// || numberOfTroopsCanBeSpawned <= 0
             {
                 return false;
             }
