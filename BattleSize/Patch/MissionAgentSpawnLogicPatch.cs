@@ -9,36 +9,8 @@ using TaleWorlds.MountAndBlade;
 
 namespace BattleSize
 {
-    [HarmonyPatch(typeof(BannerlordConfig))]
-    class BannerlordConfigPatchBS
-    {
-        [HarmonyPostfix]
-        [HarmonyPatch("GetRealBattleSize")]
-        static void GetRealBattleSize(ref int __result)
-        {
-            // 1000 default max
-            __result = Settings.Instance.RealBattleSize;
-        }
-
-        [HarmonyPostfix]
-        [HarmonyPatch("GetRealBattleSizeForSiege")]
-        static void GetRealBattleSizeForSiege(ref int __result)
-        {
-            // 1000 default max
-            __result = Settings.Instance.RealBattleSize;
-        }
-
-        [HarmonyPostfix]
-        [HarmonyPatch("GetRealBattleSizeForSallyOut")]
-        static void GetRealBattleSizeForSallyOut(ref int __result)
-        {
-            // 1000 default max
-            __result = Settings.Instance.RealBattleSize;
-        }
-    }
-
     [HarmonyPatch(typeof(MissionAgentSpawnLogic))]
-    class MissionAgentSpawnLogicPatchBS
+    class MissionAgentSpawnLogicPatch
     {
         [HarmonyPostfix]
         [HarmonyPatch("get_MaxNumberOfTroopsForMission")]
@@ -345,12 +317,6 @@ namespace BattleSize
             if (TotalSpawnNumber <= 0)// || numberOfTroopsCanBeSpawned <= 0
             {
                 return false;
-            }
-
-            //horse flee
-            if (Mission.Current.MountsWithoutRiders.Count>100 && Mission.Current.AllAgents.Count > 1024)
-            {
-                Mission.Current.MountsWithoutRiders.Do(horseNotMount => horseNotMount.Retreat());
             }
 
             int nbAgentSpawnable = Settings.Instance.RealBattleSize - __instance.Mission.AllAgents.Count;

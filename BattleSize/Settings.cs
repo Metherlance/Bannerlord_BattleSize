@@ -49,8 +49,20 @@ namespace BattleSize
             }
         }
 
+        private float _riderDieMountFleeDie = .5f;
+        public float RiderDieMountFleeDie
+        {
+            get => _riderDieMountFleeDie;
+            set
+            {
+                // 0 <= value <= 1
+                _riderDieMountFleeDie = Math.Max(1, Math.Min(0, value));
+            }
+        }
+
         public bool ShowInfo { get; set; } = true;
 
         public bool ErrorWhileLoading { get; set; } = false;
+
     }
 }
