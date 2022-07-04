@@ -16,7 +16,7 @@
 	
   <!-- min: 0 max: 1 Ex: 0.5123 -->
   <!-- When agents>1024 and 1 rider die this mount will flee or die. 0 mount always flee, 1 mount always die-->
-  <OneVsMax>0.5</OneVsMax>
+  <RiderDieMountFleeDie>0.5</RiderDieMountFleeDie>
 
   <!-- Show value loaded in game -->
   <ShowInfo>true</ShowInfo>

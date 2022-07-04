@@ -392,8 +392,7 @@ namespace BattleSize
                 {
 
                     // presuplly
-                    if (!____missionSides[0].hasPreSupply() && !____missionSides[1].hasPreSupply() && DefenderActivePhase.InitialSpawnNumber>0 && AttackerActivePhase.InitialSpawnNumber>0 
-                        && DefenderActivePhase.RemainingSpawnNumber == 0 && AttackerActivePhase.RemainingSpawnNumber == 0)
+                    if (!____missionSides[0].hasPreSupply() && !____missionSides[1].hasPreSupply())
                     {
                         int nbEntitySpawnableLeft = Settings.ENTITY_ENGINE_MAX - __instance.Mission.AllAgents.Count();
                         int nbAgentSpawnableLeft = Settings.Instance.RealBattleSize - __instance.Mission.Agents.Count();
