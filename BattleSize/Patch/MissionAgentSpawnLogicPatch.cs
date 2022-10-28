@@ -17,7 +17,8 @@ namespace BattleSize
         static void Postfix(ref int __result)
         {
             // default is 1024 troops ( 2048 agents max / 2 (for cav) )
-            __result = Math.Max(__result, Settings.Instance.RealBattleSize);
+            // just after this._battleSize = MathF.Min(this._battleSize, MissionAgentSpawnLogic.MaxNumberOfTroopsForMission);
+            __result *= 2;
         }
 
         private class SpawnPhase
@@ -58,6 +59,7 @@ namespace BattleSize
             private readonly MissionAgentSpawnLogic _spawnLogic;
             private readonly BattleSideEnum _side;
             private readonly IMissionTroopSupplier _troopSupplier;
+            private BannerBearerLogic _bannerBearerLogic;
             private readonly MBList<Formation> _spawnedFormations;
             private bool _spawnWithHorses;
             private float _reinforcementBatchPriority;
@@ -66,6 +68,7 @@ namespace BattleSize
             private int _reinforcementsSpawnedInLastBatch;
             private int _numSpawnedTroops;
             private readonly List<IAgentOriginBase> _reservedTroops = new List<IAgentOriginBase>();
+            private List<ValueTuple<Team, List<IAgentOriginBase>>> _troopOriginsToSpawnPerTeam;
             private readonly (int currentTroopIndex, int troopCount)[] _reinforcementSpawnedUnitCountPerFormation;
             private readonly Dictionary<IAgentOriginBase, FormationClass> _reinforcementTroopFormationAssignments;
 
@@ -84,7 +87,7 @@ namespace BattleSize
             public int ReinforcementsSpawnedInLastBatch => this._reinforcementsSpawnedInLastBatch;
 
 
-            public int SpawnTroops(int number, bool isReinforcement, bool enforceSpawningOnInitialPoint = false)
+            public int SpawnTroops(int number, bool isReinforcement)
             {
                 int nbAgentCanBeAllocate = Settings.ENTITY_ENGINE_MAX - Mission.Current.AllAgents.Count;
                 if (number <= 0 || nbAgentCanBeAllocate<2)
@@ -122,7 +125,11 @@ namespace BattleSize
                 List<IAgentOriginBase> listAgentInFormationToSpawn = new List<IAgentOriginBase>();
                 int nbTroopMount = 0;
                 int nbTroopNoMount = 0;
-                List<(IAgentOriginBase, FormationClass)> troopFormationAssignments = MissionGameModels.Current.BattleInitializationModel.GetTroopFormationAssignments(listAgentBase, isReinforcement);
+                
+                // todo for isReinforcement
+                //_reinforcementTroopFormationAssignments.TryGetValue(key, out num4);
+                List<ValueTuple<IAgentOriginBase, int>> troopFormationAssignments = MissionGameModels.Current.BattleSpawnModel.GetInitialSpawnAssignments(_side, listAgentBase);
+               
                 for (int indexFormationClass = 0; indexFormationClass < 8; indexFormationClass++)
                 {
                     listAgentInFormationToSpawn.Clear();
@@ -131,7 +138,7 @@ namespace BattleSize
                     foreach (var troopFormationAssignment in troopFormationAssignments)
                     {
                         IAgentOriginBase troopAssigned = troopFormationAssignment.Item1;
-                        FormationClass formationAssigned = troopFormationAssignment.Item2;
+                        FormationClass formationAssigned = (FormationClass) troopFormationAssignment.Item2;
                         if (formationClass != formationAssigned)
                         {
                             continue;
@@ -189,12 +196,19 @@ namespace BattleSize
                         }
                         foreach (IAgentOriginBase agentBaseToSpawn in listAgentInFormationToSpawn)
                         {
-                           //TODO
-                           //Mission.Current.SpawnTroop(agentBaseToSpawn, IsPlayerSide, hasFormation: true, _spawnWithHorses, isReinforcement, enforceSpawningOnInitialPoint, nbAgentInFormationToSpawn, nbSpawned, isAlarmed: true, wieldInitialWeapons: true, forceDismounted: false, null, null);
-                           Mission.Current.SpawnTroop(agentBaseToSpawn, this.IsPlayerSide, true, this._spawnWithHorses    , isReinforcement, num2, indexTroopInFormation, true, true, false, new Vec3?(), new Vec2?(), (string)null);
+                            if (this._bannerBearerLogic != null && Mission.Current.Mode != MissionMode.Deployment && this._bannerBearerLogic.GetMissingBannerCount(formation) > 0)
+                            {
+                                this._bannerBearerLogic.SpawnBannerBearer(agentBaseToSpawn, this.IsPlayerSide, formation,
+                                    this._spawnWithHorses, isReinforcement, num2, indexTroopInFormation, true, true, false, new Vec3?(), new Vec2?(), (string)null);
+                            }
+                            else
+                            {
+                                Mission.Current.SpawnTroop(agentBaseToSpawn, this.IsPlayerSide, true,
+                                    this._spawnWithHorses, isReinforcement, num2, indexTroopInFormation, true, true, false, new Vec3?(), new Vec2?(), (string)null);
+                            }
+
                             ++this._numSpawnedTroops;
                             ++indexTroopInFormation;
-                            //++num1;
                         }
                         nbSpawned += listAgentInFormationToSpawn.Count;
                     }
@@ -298,10 +312,10 @@ namespace BattleSize
             }
 
             internal bool hasPreSupply()
-        {
-            return _reservedTroops.Count() > 0;
+            {
+                return _reservedTroops.Count() > 0;
+            }
         }
-    }
 
         [HarmonyPrefix]
         [HarmonyPatch("CheckReinforcementSpawn")]
@@ -319,8 +333,8 @@ namespace BattleSize
                 return false;
             }
 
-            int nbAgentSpawnable = Settings.Instance.RealBattleSize - __instance.Mission.AllAgents.Count;
-            int nbAgentSpawnMin = (int)(((float)____battleSize) * 0.100000001490116);
+            int nbAgentSpawnable = ____battleSize - __instance.Mission.AllAgents.Count;
+            int nbAgentSpawnMin = (int)(((float)____battleSize) * 0.1);
 
             // || last troop need to spawn
             if (nbAgentSpawnable > nbAgentSpawnMin)
@@ -360,27 +374,38 @@ namespace BattleSize
                 //horse 2 times for att in case of engine limit
                 if (nbSpawnableAtt > 1)
                 {
-                    int spawned = (int)____missionSides[1].SpawnTroops(nbSpawnableAtt / 2, true, true);
+                    int spawned = (int)____missionSides[1].SpawnTroops(nbSpawnableAtt / 2, true);
                     AttackerActivePhase.RemainingSpawnNumber -= spawned;
                     nbSpawnableAtt -= spawned;
                 }
                 if (nbSpawnableDef > 0)
                 {
-                    DefenderActivePhase.RemainingSpawnNumber -= (int)____missionSides[0].SpawnTroops(nbSpawnableDef, true, true);
+                    DefenderActivePhase.RemainingSpawnNumber -= (int)____missionSides[0].SpawnTroops(nbSpawnableDef, true);
 
                 }
                 if (nbSpawnableAtt > 0)
                 {
-                    AttackerActivePhase.RemainingSpawnNumber -= (int)____missionSides[1].SpawnTroops(nbSpawnableAtt, true, true);
+                    AttackerActivePhase.RemainingSpawnNumber -= (int)____missionSides[1].SpawnTroops(nbSpawnableAtt, true);
                 }
+
             }
             return false;
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch("CheckReinforcementBatch")]
+        static void CheckReinforcementBatch(MissionAgentSpawnLogic __instance, ref List<SpawnPhase>[] ____phases, ref bool ____reinforcementSpawnEnabled)
+        {
+            SpawnPhase DefenderActivePhase = ____phases[0][0];
+            SpawnPhase AttackerActivePhase = ____phases[1][0];
+            int TotalSpawnNumber = DefenderActivePhase.RemainingSpawnNumber + AttackerActivePhase.RemainingSpawnNumber;
+            ____reinforcementSpawnEnabled |= TotalSpawnNumber > 0;
         }
 
 
         [HarmonyPrefix]
         [HarmonyPatch("CheckInitialSpawns")]
-        static bool CheckInitialSpawns(ref bool __result, MissionAgentSpawnLogic __instance, ref List<SpawnPhase>[] ____phases, ref FormationSpawnData[] ____formationSpawnData,
+        static bool CheckInitialSpawns(ref bool __result, MissionAgentSpawnLogic __instance, ref int ____battleSize, ref List<SpawnPhase>[] ____phases, ref FormationSpawnData[] ____formationSpawnData,
             ref MissionSide[] ____missionSides)
         {
             if (!__instance.IsInitialSpawnOver)
@@ -395,7 +420,7 @@ namespace BattleSize
                     if (!____missionSides[0].hasPreSupply() && !____missionSides[1].hasPreSupply())
                     {
                         int nbEntitySpawnableLeft = Settings.ENTITY_ENGINE_MAX - __instance.Mission.AllAgents.Count();
-                        int nbAgentSpawnableLeft = Settings.Instance.RealBattleSize - __instance.Mission.Agents.Count();
+                        int nbAgentSpawnableLeft = ____battleSize - __instance.Mission.Agents.Count();
 
                         //ratio
                         int TotalSpawnNumber = DefenderActivePhase.TotalSpawnNumber + AttackerActivePhase.TotalSpawnNumber;

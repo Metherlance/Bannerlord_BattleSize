@@ -43,13 +43,14 @@ namespace BattleSize
                 }
                 else
                 {
-                    InformationManager.DisplayMessage(new InformationMessage("BattleSize | set " + Settings.Instance.RealBattleSize + " to RealBattleSize"));
+                    InformationManager.DisplayMessage(new InformationMessage("BattleSize | set " + Settings.Instance.RealBattleSize + " "+ Settings.Instance.RealBattleSizeForSiege + " " + Settings.Instance.RealBattleSizeForSallyOut ));
                 }
             }
             // show only 1 time
             Settings.Instance.ShowInfo = false;
         }
     }
+
 }
 
 

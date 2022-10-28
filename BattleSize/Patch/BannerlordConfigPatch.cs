@@ -25,7 +25,7 @@ namespace BattleSize
         static void GetRealBattleSizeForSiege(ref int __result)
         {
             // 1000 default max
-            __result = Settings.Instance.RealBattleSize;
+            __result = Settings.Instance.RealBattleSizeForSiege;
         }
 
         [HarmonyPostfix]
@@ -33,7 +33,7 @@ namespace BattleSize
         static void GetRealBattleSizeForSallyOut(ref int __result)
         {
             // 1000 default max
-            __result = Settings.Instance.RealBattleSize;
+            __result = Settings.Instance.RealBattleSizeForSallyOut;
         }
     }
 

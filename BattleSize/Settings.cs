@@ -38,6 +38,28 @@ namespace BattleSize
             }
         }
 
+        private int _realBattleSizeForSiege = 1024;
+        public int RealBattleSizeForSiege
+        {
+            get => _realBattleSizeForSiege;
+            set
+            {
+                // 2 <= value <= 2047
+                _realBattleSizeForSiege = Math.Max(2, Math.Min(2047, value));
+            }
+        }
+
+        private int _realBattleSizeForSallyOut = 1024;
+        public int RealBattleSizeForSallyOut
+        {
+            get => _realBattleSizeForSallyOut;
+            set
+            {
+                // 2 <= value <= 2047
+                _realBattleSizeForSallyOut = Math.Max(2, Math.Min(2047, value));
+            }
+        }
+
         private float _oneVsMax = 2;
         public float OneVsMax
         {
