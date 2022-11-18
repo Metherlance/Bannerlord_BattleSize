@@ -417,7 +417,7 @@ namespace BattleSize
                 {
 
                     // presuplly
-                    if (!____missionSides[0].hasPreSupply() && !____missionSides[1].hasPreSupply())
+                    if (!____missionSides[0].hasPreSupply() && !____missionSides[1].hasPreSupply() && DefenderActivePhase.InitialSpawnNumber>0 && AttackerActivePhase.InitialSpawnNumber > 0)
                     {
                         int nbEntitySpawnableLeft = Settings.ENTITY_ENGINE_MAX - __instance.Mission.AllAgents.Count();
                         int nbAgentSpawnableLeft = ____battleSize - __instance.Mission.Agents.Count();
@@ -529,6 +529,7 @@ namespace BattleSize
                     if (__instance.Mission.DeploymentPlan.IsPlanMadeForBattleSide(battleSideEnum,DeploymentPlanType.Initial)
                          && __troopSpawnActive && activePhaseForSide.InitialSpawnNumber > 0)
                     {
+                        // this will empty reserved troops...
                         ____missionSides[index].SpawnTroops(activePhaseForSide.InitialSpawnNumber, false);
 
                         // Don't know how send event ...
