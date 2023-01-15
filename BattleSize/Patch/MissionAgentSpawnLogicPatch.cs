@@ -427,14 +427,15 @@ namespace BattleSize
                         int[] tabSpawnLeft = new int[2];
                         if (TotalSpawnNumber > nbAgentSpawnableLeft)
                         {
+                            float ratioDefByAtt = (float)DefenderActivePhase.TotalSpawnNumber / (float)AttackerActivePhase.TotalSpawnNumber;
                             // 1 vs max
-                            int nbTroopMin = (int)((float)TotalSpawnNumber / (1f + Settings.Instance.OneVsMax));
-                            if (DefenderActivePhase.TotalSpawnNumber < nbTroopMin)
+                            int nbTroopMin = (int)((float)nbAgentSpawnableLeft / (1f + Settings.Instance.OneVsMax));
+                            if (ratioDefByAtt < (1 / Settings.Instance.OneVsMax))
                             {
                                 tabSpawnLeft[0] = (int)MathF.Min(DefenderActivePhase.TotalSpawnNumber, nbTroopMin);
                                 tabSpawnLeft[1] = nbAgentSpawnableLeft - tabSpawnLeft[0];
                             }
-                            else if (AttackerActivePhase.TotalSpawnNumber < nbTroopMin)
+                            else if (ratioDefByAtt > Settings.Instance.OneVsMax)
                             {
                                 // begin with side whose has less troops
                                 tabSpawnLeft[1] = (int)MathF.Min(AttackerActivePhase.TotalSpawnNumber, nbTroopMin);
@@ -442,7 +443,7 @@ namespace BattleSize
                             }
                             else
                             {
-                                tabSpawnLeft[0] = DefenderActivePhase.TotalSpawnNumber * nbAgentSpawnableLeft / TotalSpawnNumber;
+                                tabSpawnLeft[0] = (int)(nbAgentSpawnableLeft * ratioDefByAtt);
                                 tabSpawnLeft[1] = nbAgentSpawnableLeft - tabSpawnLeft[0];
                             }
 
