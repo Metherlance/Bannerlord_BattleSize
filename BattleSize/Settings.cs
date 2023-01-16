@@ -34,7 +34,7 @@ namespace BattleSize
             set
             {
                 // 2 <= value <= 2047
-                _realBattleSize = Math.Max(2, Math.Min(2047, value));
+                _realBattleSize = Math.Max(2, Math.Min(2040, value));
             }
         }
 
@@ -45,7 +45,7 @@ namespace BattleSize
             set
             {
                 // 2 <= value <= 2047
-                _realBattleSizeForSiege = Math.Max(2, Math.Min(2047, value));
+                _realBattleSizeForSiege = Math.Max(2, Math.Min(2040, value));
             }
         }
 
@@ -56,7 +56,7 @@ namespace BattleSize
             set
             {
                 // 2 <= value <= 2047
-                _realBattleSizeForSallyOut = Math.Max(2, Math.Min(2047, value));
+                _realBattleSizeForSallyOut = Math.Max(2, Math.Min(2040, value));
             }
         }
 
