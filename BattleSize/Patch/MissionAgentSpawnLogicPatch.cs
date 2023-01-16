@@ -226,14 +226,16 @@ namespace BattleSize
 
                 foreach (Team team2 in Mission.Current.Teams)
                 {
-                    foreach (Formation formation2 in team2.Formations)
+                    foreach (Formation formation2 in team2.FormationsIncludingEmpty)
                     {
-                        formation2.GroupSpawnIndex = 0;
-                        formation2.EndSpawn();
+                        if (formation2.CountOfUnits > 0 && formation2.IsSpawning)
+                        {
+                            formation2.EndSpawn();
+                        }
                     }
                 }
 
-                return nbSpawned; 
+                return nbSpawned;
 
             }
 
@@ -397,15 +399,6 @@ namespace BattleSize
             return false;
         }
 
-        [HarmonyPostfix]
-        [HarmonyPatch("CheckReinforcementBatch")]
-        static void CheckReinforcementBatch(MissionAgentSpawnLogic __instance, ref List<SpawnPhase>[] ____phases, ref bool ____reinforcementSpawnEnabled)
-        {
-            SpawnPhase DefenderActivePhase = ____phases[0][0];
-            SpawnPhase AttackerActivePhase = ____phases[1][0];
-            int TotalSpawnNumber = DefenderActivePhase.RemainingSpawnNumber + AttackerActivePhase.RemainingSpawnNumber;
-            ____reinforcementSpawnEnabled |= TotalSpawnNumber > 0;
-        }
 
 
         [HarmonyPrefix]
@@ -498,13 +491,15 @@ namespace BattleSize
                                 ____missionSides[indexBattleSide].GetFormationSpawnData(____formationSpawnData);
                                 for (int fClass = 0; fClass < ____formationSpawnData.Length; ++fClass)
                                 {
-                                    if (____formationSpawnData[fClass].NumTroops > 0) { 
+                                    if (____formationSpawnData[fClass].NumTroops > 0)
+                                    {
                                         __instance.Mission.AddTroopsToDeploymentPlan(battleSideEnum, DeploymentPlanType.Initial, (FormationClass)fClass, ____formationSpawnData[fClass].FootTroopCount, ____formationSpawnData[fClass].MountedTroopCount);
                                     }
                                 }
                             }
                             float spawnPathOffset = 0.0f;
-                            if (__instance.Mission.HasSpawnPath) {
+                            if (__instance.Mission.HasSpawnPath)
+                            {
                                 spawnPathOffset = Mission.GetBattleSizeOffset(sizeForActivePhase, __instance.Mission.GetInitialSpawnPath());
                             }
                             __instance.Mission.MakeDeploymentPlanForSide(battleSideEnum, DeploymentPlanType.Initial, spawnPathOffset);
