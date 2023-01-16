@@ -343,32 +343,37 @@ namespace BattleSize
                 int nbSpawnableAtt;
                 if (TotalSpawnNumber > nbAgentSpawnable)
                 {
-                    int realBattleSizeWithoutHorse = nbAgentSpawnable + DefenderActivePhase.NumberActiveTroops + AttackerActivePhase.NumberActiveTroops;
                     // ratio with spawn left and active units
-                    // nbSpawnableDef =(MaxUnitOnField*(DefSpawnLeft+DefActiveUnit)/(AllSpawnLeft+AllUnitActive))-DefActiveUnit
-                    int nbDefUnitTheorical = ((realBattleSizeWithoutHorse * (DefenderActivePhase.RemainingSpawnNumber + DefenderActivePhase.NumberActiveTroops)) / (TotalSpawnNumber + DefenderActivePhase.NumberActiveTroops + AttackerActivePhase.NumberActiveTroops));
-                    nbSpawnableDef = MathF.Min(MathF.Max(nbDefUnitTheorical - DefenderActivePhase.NumberActiveTroops, 0), MathF.Min(nbAgentSpawnable, DefenderActivePhase.RemainingSpawnNumber));
-                    nbSpawnableAtt = MathF.Min(MathF.Max(nbAgentSpawnable - nbSpawnableDef, 0), AttackerActivePhase.RemainingSpawnNumber);
+                    float ratioDefByAtt = (float)(DefenderActivePhase.RemainingSpawnNumber + DefenderActivePhase.NumberActiveTroops) /
+                        (float)(AttackerActivePhase.RemainingSpawnNumber + AttackerActivePhase.NumberActiveTroops);
+                    // 1 vs max
+                    int nbTroopMin = (int)((float)____battleSize / (1f + Settings.Instance.OneVsMax));
+
+                    if (ratioDefByAtt < (1 / Settings.Instance.OneVsMax))
+                    {
+                        nbSpawnableDef = MathF.Max(MathF.Min(MathF.Min(DefenderActivePhase.RemainingSpawnNumber, nbTroopMin - DefenderActivePhase.NumberActiveTroops), nbAgentSpawnable),0);
+                        nbSpawnableAtt = nbAgentSpawnable - nbSpawnableDef;
+                    }
+                    else if (ratioDefByAtt > Settings.Instance.OneVsMax)
+                    {
+                        // begin with side whose has less troops
+                        nbSpawnableAtt = MathF.Max(MathF.Min(MathF.Min(AttackerActivePhase.RemainingSpawnNumber, nbTroopMin - AttackerActivePhase.NumberActiveTroops), nbAgentSpawnable),0);
+                        nbSpawnableDef = nbAgentSpawnable - nbSpawnableAtt;
+                    }
+                    else
+                    {
+                        // nb unit max without horse and dead corpse not cleaned
+                        int realBattleSizeWithoutHorse = nbAgentSpawnable + DefenderActivePhase.NumberActiveTroops + AttackerActivePhase.NumberActiveTroops;
+                        // troup min def - def active
+                        nbSpawnableDef = MathF.Max(MathF.Min(((int)(realBattleSizeWithoutHorse * ratioDefByAtt) - DefenderActivePhase.NumberActiveTroops), nbAgentSpawnable),0);
+                        nbSpawnableAtt = nbAgentSpawnable - nbSpawnableDef;
+                    }
+
                 }
                 else
                 {
                     nbSpawnableDef = DefenderActivePhase.RemainingSpawnNumber;
                     nbSpawnableAtt = AttackerActivePhase.RemainingSpawnNumber;
-                }
-
-                // 1 vs 2 max if renforcement
-                int defUnitActiveAndSpawn = nbSpawnableDef + DefenderActivePhase.NumberActiveTroops;
-                int attUnitActiveAndSpawn = nbSpawnableAtt + AttackerActivePhase.NumberActiveTroops;
-                // -50 for tiny battle
-                if (nbSpawnableAtt > 0 && defUnitActiveAndSpawn - 50 > (float)attUnitActiveAndSpawn * Settings.Instance.OneVsMax)
-                {
-                    nbSpawnableDef = 0;
-                    nbSpawnableAtt = MathF.Min(nbAgentSpawnable, AttackerActivePhase.RemainingSpawnNumber);
-                }
-                if (nbSpawnableDef > 0 && attUnitActiveAndSpawn - 50 > (float)defUnitActiveAndSpawn * Settings.Instance.OneVsMax)
-                {
-                    nbSpawnableAtt = 0;
-                    nbSpawnableDef = MathF.Min(nbAgentSpawnable, DefenderActivePhase.RemainingSpawnNumber);
                 }
 
                 //horse 2 times for att in case of engine limit
