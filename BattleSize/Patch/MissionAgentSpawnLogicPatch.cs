@@ -366,8 +366,10 @@ namespace BattleSize
                     {
                         // nb unit max without horse and dead corpse not cleaned
                         int realBattleSizeWithoutHorse = nbAgentSpawnable + DefenderActivePhase.NumberActiveTroops + AttackerActivePhase.NumberActiveTroops;
+                        int nbDefTroopsTotal = DefenderActivePhase.RemainingSpawnNumber + DefenderActivePhase.NumberActiveTroops;
+                        int nbTroopsTotal = nbDefTroopsTotal + AttackerActivePhase.RemainingSpawnNumber + AttackerActivePhase.NumberActiveTroops;
                         // troup min def - def active
-                        nbSpawnableDef = MathF.Max(MathF.Min(((int)(realBattleSizeWithoutHorse * ratioDefByAtt) - DefenderActivePhase.NumberActiveTroops), nbAgentSpawnable),0);
+                        nbSpawnableDef = MathF.Max(MathF.Min(((realBattleSizeWithoutHorse * nbDefTroopsTotal / nbTroopsTotal) - DefenderActivePhase.NumberActiveTroops), nbAgentSpawnable),0);
                         nbSpawnableAtt = nbAgentSpawnable - nbSpawnableDef;
                     }
 
@@ -441,7 +443,7 @@ namespace BattleSize
                             }
                             else
                             {
-                                tabSpawnLeft[0] = (int)(nbAgentSpawnableLeft * ratioDefByAtt);
+                                tabSpawnLeft[0] = nbAgentSpawnableLeft * DefenderActivePhase.TotalSpawnNumber / TotalSpawnNumber;
                                 tabSpawnLeft[1] = nbAgentSpawnableLeft - tabSpawnLeft[0];
                             }
 
