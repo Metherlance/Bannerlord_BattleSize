@@ -91,7 +91,7 @@ namespace BattleSize
             public int SpawnTroops(int number, bool isReinforcement)
             {
                 int nbAgentCanBeAllocate = Settings.ENTITY_ENGINE_MAX - Mission.Current.AllAgents.Count;
-                if (number <= 0 || nbAgentCanBeAllocate<2)
+                if (number <= 0 || nbAgentCanBeAllocate < 2)
                 {
                     return 0;
                 }
@@ -101,10 +101,10 @@ namespace BattleSize
                 if (nbSpawnFromPreSupplied > 0)
                 {
                     int indexReserved = 0;
-                    for (; indexReserved < nbSpawnFromPreSupplied && nbAgentCanBeAllocate>1; indexReserved++)
+                    for (; indexReserved < nbSpawnFromPreSupplied && nbAgentCanBeAllocate > 1; indexReserved++)
                     {
                         IAgentOriginBase reservedTroop = _reservedTroops[indexReserved];
-                        nbAgentCanBeAllocate-=1;
+                        nbAgentCanBeAllocate -= 1;
                         if (reservedTroop.Troop.HasMount() && (_spawnWithHorses || reservedTroop.Troop.IsHero))
                         {
                             nbAgentCanBeAllocate -= 1;
@@ -116,7 +116,7 @@ namespace BattleSize
                 }
 
                 int numberToAllocate = number - nbSpawnFromPreSupplied;
-                if (numberToAllocate>0)
+                if (numberToAllocate > 0)
                 {
                     listAgentBase.AddRange(SupplyTroopsCustom(numberToAllocate, nbAgentCanBeAllocate).Item1);
                 }
@@ -126,11 +126,11 @@ namespace BattleSize
                 List<IAgentOriginBase> listAgentInFormationToSpawn = new List<IAgentOriginBase>();
                 int nbTroopMount = 0;
                 int nbTroopNoMount = 0;
-                
+
                 // todo for isReinforcement
                 //_reinforcementTroopFormationAssignments.TryGetValue(key, out num4);
                 List<ValueTuple<IAgentOriginBase, int>> troopFormationAssignments = MissionGameModels.Current.BattleSpawnModel.GetInitialSpawnAssignments(_side, listAgentBase);
-               
+
                 for (int indexFormationClass = 0; indexFormationClass < 8; indexFormationClass++)
                 {
                     listAgentInFormationToSpawn.Clear();
@@ -139,7 +139,7 @@ namespace BattleSize
                     foreach (var troopFormationAssignment in troopFormationAssignments)
                     {
                         IAgentOriginBase troopAssigned = troopFormationAssignment.Item1;
-                        FormationClass formationAssigned = (FormationClass) troopFormationAssignment.Item2;
+                        FormationClass formationAssigned = (FormationClass)troopFormationAssignment.Item2;
                         if (formationClass != formationAssigned)
                         {
                             continue;
@@ -192,7 +192,7 @@ namespace BattleSize
                         if (formation != null && !formation.HasBeenPositioned)
                         {
                             formation.BeginSpawn(num2, isMounted);
-                            Mission.Current.SpawnFormation(formation);
+                            Mission.Current.SetFormationPositioningFromDeploymentPlan(formation);
                             _spawnedFormations.Add(formation);
                         }
                         foreach (IAgentOriginBase agentBaseToSpawn in listAgentInFormationToSpawn)
@@ -349,10 +349,52 @@ namespace BattleSize
                 }
             }
 
+            public int TryReinforcementSpawn()
+            {
+                int num1 = 0;
+                if (this.ReinforcementSpawnActive && this.TroopSpawnActive && this._reservedTroops.Count > 0)
+                {
+                    int num2 = MissionAgentSpawnLogic.MaxNumberOfAgentsForMission - this._spawnLogic.NumberOfAgents;
+                    int reservedTroopQuota = this.GetReservedTroopQuota(0);
+                    int num3 = reservedTroopQuota;
+                    if (num2 >= num3)
+                    {
+                        num1 = this.SpawnTroops(1, true);
+                        if (num1 > 0)
+                        {
+                            this._reinforcementQuotaRequirement -= reservedTroopQuota;
+                            if (this._reservedTroops.Count >= this._reinforcementBatchSize)
+                                this._reinforcementQuotaRequirement += this.GetReservedTroopQuota(this._reinforcementBatchSize - 1);
+                            this._reinforcementBatchPriority /= 2f;
+                        }
+                    }
+                }
+                this._reinforcementsSpawnedInLastBatch += num1;
+                return num1;
+            }
+
             private int GetReservedTroopQuota(int index)
             {
                 return !this._spawnWithHorses || !this._reservedTroops[index].Troop.IsMounted ? 1 : 2;
             }
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch("CheckGlobalReinforcementBatch")]
+        static void CheckGlobalReinforcementBatch(ref bool ____spawningReinforcements, ref List<SpawnPhase>[] ____phases)
+        {
+            SpawnPhase DefenderActivePhase = ____phases[0][0];
+            SpawnPhase AttackerActivePhase = ____phases[1][0];
+            ____spawningReinforcements |= DefenderActivePhase.RemainingSpawnNumber>0 || AttackerActivePhase.RemainingSpawnNumber>0;
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch("CheckCustomReinforcementBatch")]
+        static void CheckCustomReinforcementBatch(ref bool ____spawningReinforcements, ref List<SpawnPhase>[] ____phases)
+        {
+            SpawnPhase DefenderActivePhase = ____phases[0][0];
+            SpawnPhase AttackerActivePhase = ____phases[1][0];
+            ____spawningReinforcements |= DefenderActivePhase.RemainingSpawnNumber > 0 || AttackerActivePhase.RemainingSpawnNumber > 0;
         }
 
         [HarmonyPrefix]
@@ -389,13 +431,13 @@ namespace BattleSize
 
                     if (ratioDefByAtt < (1 / Settings.Instance.OneVsMax))
                     {
-                        nbSpawnableDef = MathF.Max(MathF.Min(MathF.Min(DefenderActivePhase.RemainingSpawnNumber, nbTroopMin - DefenderActivePhase.NumberActiveTroops), nbAgentSpawnable),0);
+                        nbSpawnableDef = MathF.Max(MathF.Min(MathF.Min(DefenderActivePhase.RemainingSpawnNumber, nbTroopMin - DefenderActivePhase.NumberActiveTroops), nbAgentSpawnable), 0);
                         nbSpawnableAtt = nbAgentSpawnable - nbSpawnableDef;
                     }
                     else if (ratioDefByAtt > Settings.Instance.OneVsMax)
                     {
                         // begin with side whose has less troops
-                        nbSpawnableAtt = MathF.Max(MathF.Min(MathF.Min(AttackerActivePhase.RemainingSpawnNumber, nbTroopMin - AttackerActivePhase.NumberActiveTroops), nbAgentSpawnable),0);
+                        nbSpawnableAtt = MathF.Max(MathF.Min(MathF.Min(AttackerActivePhase.RemainingSpawnNumber, nbTroopMin - AttackerActivePhase.NumberActiveTroops), nbAgentSpawnable), 0);
                         nbSpawnableDef = nbAgentSpawnable - nbSpawnableAtt;
                     }
                     else
@@ -405,7 +447,7 @@ namespace BattleSize
                         int nbDefTroopsTotal = DefenderActivePhase.RemainingSpawnNumber + DefenderActivePhase.NumberActiveTroops;
                         int nbTroopsTotal = nbDefTroopsTotal + AttackerActivePhase.RemainingSpawnNumber + AttackerActivePhase.NumberActiveTroops;
                         // troup min def - def active
-                        nbSpawnableDef = MathF.Max(MathF.Min(((realBattleSizeWithoutHorse * nbDefTroopsTotal / nbTroopsTotal) - DefenderActivePhase.NumberActiveTroops), nbAgentSpawnable),0);
+                        nbSpawnableDef = MathF.Max(MathF.Min(((realBattleSizeWithoutHorse * nbDefTroopsTotal / nbTroopsTotal) - DefenderActivePhase.NumberActiveTroops), nbAgentSpawnable), 0);
                         nbSpawnableAtt = nbAgentSpawnable - nbSpawnableDef;
                     }
 
@@ -436,12 +478,11 @@ namespace BattleSize
             }
             return false;
         }
-               
 
         [HarmonyPrefix]
         [HarmonyPatch("CheckDeployment")]
         static bool CheckDeployment(ref bool __result, MissionAgentSpawnLogic __instance, ref int ____battleSize, ref List<SpawnPhase>[] ____phases, ref FormationSpawnData[] ____formationSpawnData,
-            ref MissionSide[] ____missionSides, ref Action<BattleSideEnum, int> ___OnInitialTroopsSpawned, ref List<BattleSideEnum> ____sidesWhereSpawnOccured)
+        ref MissionSide[] ____missionSides, ref Action<BattleSideEnum, int> ___OnInitialTroopsSpawned, ref List<BattleSideEnum> ____sidesWhereSpawnOccured)
         {
             bool isDeploymentOver = __instance.IsDeploymentOver;
             if (!isDeploymentOver)
@@ -560,16 +601,16 @@ namespace BattleSize
                         ____missionSides[indexSide].SpawnTroops(initialSpawnNumber, false);
                         ____phases[indexSide][0].OnInitialTroopsSpawned();
                         ____missionSides[indexSide].OnInitialSpawnOver();
-                       if (!____sidesWhereSpawnOccured.Contains(side))
-                           ____sidesWhereSpawnOccured.Add(side);
+                        if (!____sidesWhereSpawnOccured.Contains(side))
+                            ____sidesWhereSpawnOccured.Add(side);
 
-                        if (___OnInitialTroopsSpawned!=null)
+                        if (___OnInitialTroopsSpawned != null)
                         {
                             ___OnInitialTroopsSpawned(side, initialSpawnNumber);
                         }
                     }
                 }
-               
+
                 isDeploymentOver = __instance.IsDeploymentOver;
                 if (isDeploymentOver)
                 {

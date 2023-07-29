@@ -5,12 +5,13 @@
   <!--        BattleSize Settings             -->
   <!-- ////////////////////////////////////// -->
 
-  <!-- min: 2 max: 2047 (max is 2047 agents (camera take one entity)) -->
+  <!-- min: 2 max: 2040 -->
+  <!-- old: (max is 2047 agents (camera take one entity)) -->
   <!-- 1024 is last safe value (worst case -> full cav (1024 soldiers + 1024 horses)) -->
-  <!-- above 2048 entities (men + cav + camera) the engine will crash -->
-  <RealBattleSize>2046</RealBattleSize>
-  <RealBattleSizeForSiege>2046</RealBattleSizeForSiege>
-  <RealBattleSizeForSallyOut>2046</RealBattleSizeForSallyOut>
+  <!-- above 2040 entities (men + cav + camera + ???) the engine will crash -->
+  <RealBattleSize>2040</RealBattleSize>
+  <RealBattleSizeForSiege>2040</RealBattleSizeForSiege>
+  <RealBattleSizeForSallyOut>2040</RealBattleSizeForSallyOut>
 
   <!-- min: 1 max: 4 Ex: 1.5123 -->
   <!-- if one side has reinforcements, limit troops ratio on battlefield ex: 1 vs X max-->

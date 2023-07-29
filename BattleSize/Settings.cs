@@ -8,7 +8,7 @@ namespace BattleSize
         // singleton
 
         private static Settings _instance;
-        public const int ENTITY_ENGINE_MAX = 2047;
+        public const int ENTITY_ENGINE_MAX = 2040;
 
         public static Settings Instance
         {
